@@ -2,11 +2,14 @@ import React, { useState, useEffect } from "react";
 import "./ProductList.css";
 import CartItem from "./CartItem";
 import { addItem } from "./CartSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 function ProductList({ onHomeClick }) {
   const [showCart, setShowCart] = useState(false);
   const [showPlants, setShowPlants] = useState(false); // State to control the visibility of the About Us page
   const [addedToCart, setAddedToCart] = useState({});
+  const dispatch = useDispatch();
+  const cartItems = useSelector((state) => state.cart.items);
 
   const plantsArray = [
     {
@@ -291,6 +294,16 @@ function ProductList({ onHomeClick }) {
     setShowCart(false);
   };
 
+  // Calculate total number of items in the cart
+  const getTotalCartItems = () => {
+    return cartItems.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  // Check if an item is already in the cart
+  const isItemInCart = (itemName) => {
+    return cartItems.some((item) => item.name === itemName);
+  };
+
   const handleAddToCart = (product) => {
     dispatch(addItem(product));
     setAddedToCart((prevState) => ({
@@ -326,26 +339,32 @@ function ProductList({ onHomeClick }) {
             {" "}
             <a href="#" onClick={(e) => handleCartClick(e)} style={styleA}>
               <h1 className="cart">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 256 256"
-                  id="IconChangeColor"
-                  height="68"
-                  width="68"
-                >
-                  <rect width="156" height="156" fill="none"></rect>
-                  <circle cx="80" cy="216" r="12"></circle>
-                  <circle cx="184" cy="216" r="12"></circle>
-                  <path
-                    d="M42.3,72H221.7l-26.4,92.4A15.9,15.9,0,0,1,179.9,176H84.1a15.9,15.9,0,0,1-15.4-11.6L32.5,37.8A8,8,0,0,0,24.8,32H8"
-                    fill="none"
-                    stroke="#faf9f9"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    id="mainIconPathAttribute"
-                  ></path>
-                </svg>
+                <div className="cart-icon-container">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 256 256"
+                    id="IconChangeColor"
+                    height="68"
+                    width="68"
+                  >
+                    <rect width="156" height="156" fill="none"></rect>
+                    <circle cx="80" cy="216" r="12"></circle>
+                    <circle cx="184" cy="216" r="12"></circle>
+                    <path
+                      d="M42.3,72H221.7l-26.4,92.4A15.9,15.9,0,0,1,179.9,176H84.1a15.9,15.9,0,0,1-15.4-11.6L32.5,37.8A8,8,0,0,0,24.8,32H8"
+                      fill="none"
+                      stroke="#faf9f9"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                    ></path>
+                  </svg>
+
+                  {/* Badge inside the icon */}
+                  {getTotalCartItems() > 0 && (
+                    <span className="cart-badge">{getTotalCartItems()}</span>
+                  )}
+                </div>
               </h1>
             </a>
           </div>
@@ -369,10 +388,17 @@ function ProductList({ onHomeClick }) {
                     <div className="product-title">{plant.name}</div>
                     {/*Similarly like the above plant.name show other details like description and cost*/}
                     <button
-                      className="product-button"
+                      className={`prod-button ${
+                        isItemInCart(plant.name)
+                          ? "prod-button-disabled"
+                          : "prod-button-enabled"
+                      }`}
                       onClick={() => handleAddToCart(plant)}
+                      disabled={isItemInCart(plant.name)} // Disable button if already in the cart
                     >
-                      Add to Cart
+                      {isItemInCart(plant.name)
+                        ? "Added to Cart"
+                        : "Add to Cart"}
                     </button>
                   </div>
                 ))}
